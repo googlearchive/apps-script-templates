@@ -1,0 +1,102 @@
+<!--
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ -->
+
+<!DOCTYPE html>
+<html ng-app="addonApp">
+<head>
+  <!-- CSS -->
+  <?!= includeAddonCSS(); ?>
+
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/angularjs-toaster/0.4.14/toaster.min.css">
+
+  <style>
+    template {
+      display: none;
+    }
+
+    .error {
+      color: #dd4b39;
+      font-style: bold;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+
+      padding: 10px;
+    }
+
+    #container {
+      flex: 1;
+    }
+
+    footer {
+      text-align: center;
+    }
+
+    #toast-container > div {
+      opacity: 1.0;
+    }
+  </style>
+
+
+  <!-- BOOTSTRAP DATA -->
+  <script>
+    window.bootstrap = JSON.parse('<?= bootstrap ?>');
+  </script>
+
+</head>
+<body>
+  <toaster-container toaster-options="{'timeOut': 300}"></toaster-container>
+  <div id="container">
+    <div ui-view></div>
+  </div>
+  <footer>
+    <div ng-if="$root.isAuthorized">
+      <a tabindex="-1" ui-sref="logout">
+        <button>Log Out {{$root.user}}</button>
+      </a>
+    </div>
+  </footer>
+
+  <!-- LIBS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.15/angular.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.15/angular-ui-router.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-local-storage/0.2.2/angular-local-storage.min.js"></script>
+
+  <?!= include('ngAppsScript.js'); ?>
+
+  <!-- APP -->
+  <?!= include('app.js'); ?>
+
+  <!-- CONTROLLERS & TEMPLATES -->
+  <?!= include('main'); ?>
+
+  <?!= include('report'); ?>
+
+  <?!= include('authorize'); ?>
+
+</body>
+
+</html>

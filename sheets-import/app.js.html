@@ -1,0 +1,128 @@
+<!--
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ -->
+
+<script>
+angular.module('addonApp', [
+  'ui.router',
+  'ngAppsScript',
+  'LocalStorageModule'
+])
+.config(function($stateProvider, $urlRouterProvider) {
+
+  $urlRouterProvider.otherwise('/');
+
+  $stateProvider
+    .state('main', {
+      url: '',
+      template: AppsTemplate('main'),
+      controller: 'MainCtrl',
+    })
+    .state('authorize', {
+      url: 'authorize',
+      template: AppsTemplate('authorize'),
+      controller: 'AuthCtrl',
+    })
+    .state('report', {
+      template: AppsTemplate('report'),
+      controller: 'ReportCtrl',
+      params: {
+        id: null,
+        report: {},
+      },
+    })
+    .state('report.create', {
+      url: 'report/create',
+      template: AppsTemplate('report'),
+      controller: 'ReportCtrl',
+    })
+    .state('logout', {
+      url: 'logout',
+      controller: function($scope, $state, $rootScope, $window, $goog) {
+        $goog.signout().then(function() {
+          var intercom = Intercom.getInstance();
+          intercom.emit('oauthComplete', {
+            isAuthorized: false,
+            user: $rootScope.user
+          });
+          $state.go('authorize');
+        });
+      },
+    });
+}).run(function($rootScope, $window, $state) {
+
+  $rootScope.user = $window.bootstrap.user;
+  $rootScope.isAuthorized = $window.bootstrap.isAuthorized;
+  $rootScope.myService = $window.bootstrap.myService;
+
+  if (!$rootScope.isAuthorized) {
+    $state.go('authorize');
+  }
+
+  var intercom = Intercom.getInstance();
+  intercom.on('oauthComplete', function(data) {
+    if (data.user === $rootScope.user) {
+      $rootScope.user = data.user;
+      $rootScope.isAuthorized = data.isAuthorized;
+
+      $state.go('main');
+
+    }
+  });
+})
+
+.filter('reportName', function() {
+  return function(input, search) {
+    search = search || '';
+    return _.filter(input, function(report) {
+      if (search === '') {
+        return true;
+      }
+      return report.name.toLowerCase().indexOf(search.toLowerCase()) !== -1;
+    });
+  };
+})
+
+.filter('isOwner', function($rootScope) {
+  return function(input, isOwner) {
+    if (!isOwner) {
+      return input;
+    }
+
+    return _.filter(input, function(report) {
+      return report.owner === $rootScope.user;
+    });
+  };
+})
+
+.constant('ADDON_ERROR_CODES', {
+  1: { // AUTO_UPDATE_LIMIT
+    title: 'Too Many Repeating Reports',
+    message: 'Each user can only have 24 repeating reports at a time.',
+  },
+  2: { // ILLEGAL_EDIT
+    title: 'You Cannot Modify this Report',
+    message: 'This is a repeating report made by another user.',
+  },
+  3: { // ILLEGAL_DELETE
+    title: 'You Cannot Delete this Report',
+    message: 'You don\'t have the ability to delete this report because it belongs to another user.',
+  },
+  4: { // IMPORT_FAILED
+    title: 'Import Data Failed',
+    message: 'The Report failed for some reason.',
+  },
+});
+</script>

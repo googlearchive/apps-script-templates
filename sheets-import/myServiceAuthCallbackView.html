@@ -16,8 +16,6 @@
 
 <html>
 <head>
-  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
-  <?!= include('Stylesheet') ?>
 </head>
 <body>
   <h1><?= title ?></h1>
@@ -32,13 +30,12 @@
       You may close this tab.</p>
   <? } ?>
 
-  <?!= include('intercom.js') ?>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intercom.js/0.1.4/intercom.min.js"></script>
   <script>
-    var user = '<?= user ?>';
     var intercom = Intercom.getInstance();
     intercom.emit('oauthComplete', {
       isAuthorized: '<?= isAuthorized ?>' == 'true',
-      user: user
+      user: '<?= user ?>'
     });
   </script>
 </body>

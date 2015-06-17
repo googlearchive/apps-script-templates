@@ -1,0 +1,359 @@
+<!--
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ -->
+
+<!-- report.css.html -->
+
+<style>
+  .header {
+    display: flex;
+    flex-direction: column;
+  }
+
+  h4 {
+    margin-bottom: 10px;
+    margin-top: 10px;
+  }
+
+  .title {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 0;
+  }
+
+  .columns-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .columns-container label {
+    margin-right: 5%;
+    margin-left: 5%;
+    width: 40%;
+  }
+
+  .report-text-param,
+  .report-select-param {
+    display: flex;
+  }
+
+  .report-text-param input {
+    flex: 1;
+    margin-left: 5%;
+  }
+
+  .report-checkbox-param input {
+    margin-left: 5%;
+  }
+
+  .report-select-param select {
+    flex: 1;
+    margin-left: 5%;
+  }
+
+  .param-label-container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .param-label-container .small {
+    margin-top: 0;
+  }
+
+  .param-label {
+    margin-bottom: 0;
+    margin-top: 20px;
+  }
+
+  .report-name-label {
+    margin-top: inherit;
+  }
+
+  .action-btn-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .action-btn-top {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .action-btn-container button {
+    flex: 1;
+    margin-top: 10px;
+  }
+
+  input.ng-invalid.ng-touched {
+    border-bottom-color: #FA787E;
+    border-bottom-width: 2px;
+  }
+
+</style>
+
+<!-- report.html -->
+
+<template id="report">
+  <div>
+    <div class="header">
+      <div>
+        <button ui-sref="main" class="back">
+          <i class="fa fa-caret-left"></i> Back
+        </button>
+      </div>
+      <p class="title">{{report.id ? 'Edit Report' : 'New Report'}}</p>
+    </div>
+
+    <form name="report-form" class="report-form">
+      <!-- NAME -->
+      <div class="param-label-container">
+        <h4 class="param-label report-name-label">Report Name</h4>
+        <p class="small">Describe your Report</p>
+      </div>
+      <div class="report-text-param">
+        <input type="text" ng-model="report.name" placeholder="New Report" required>
+      </div>
+
+      <!-- COLUMNS -->
+      <div class="param-label-container">
+        <h4 class="param-label">Columns</h4>
+        <p class="small">Check the Columns in the order you'd like them to appear.</p>
+      </div>
+      <div class="columns-container">
+        <label ng-repeat="col in allColumns">
+          <input type="checkbox" ng-checked="isChecked(col.id)" ng-click="updateColumn(col.id)">
+          {{col.label}}
+        </label>
+      </div>
+
+      <!-- PARAMS -->
+      <div>
+        <div ng-repeat="param in params">
+          <div class="param-label-container">
+            <h4 class="param-label">{{param.label}}</h4>
+            <p ng-if="param.helper" class="small">{{param.helper}}</p>
+          </div>
+
+          <div ng-if="param.type === 'text'" class="report-text-param">
+            <input type="text"
+              ng-model="report.params[param.id]"
+              placeholder="{{param.value}}"
+              ng-required="param.required">
+          </div>
+
+          <div ng-if="param.type === 'checkbox'" class="report-checkbox-param">
+            <label>
+              <input type="checkbox"
+                ng-model="report.params[param.id]"
+                ng-checked="param.value">
+              {{param.label}}
+            </label>
+          </div>
+
+          <div ng-if="param.type === 'select'" class="report-select-param">
+            <select ng-model="selectParams[param.id]"
+              ng-options="opt.label for opt in param.options">
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- REPEATING -->
+      <div class="param-label-container">
+        <h4 class="param-label">Repeating</h4>
+        <p class="small">Would you like the report to be re-run every 24 hours?</p>
+      </div>
+      <div class="report-checkbox-param">
+        <label>
+          <input type="checkbox"
+            ng-model="report.scheduled">
+          Repeating
+        </label>
+      </div>
+
+      <!-- CLEAR OR APPEND -->
+      <div class="param-label-container">
+        <h4 class="param-label">Data Entry Method</h4>
+        <p class="small">
+          Whether the report should remove previous results or
+          append the new results.
+        </p>
+      </div>
+      <div class="report-select-param">
+        <select ng-model="report.clearAppend">
+          <option value="clear">Clear preview results</option>
+          <option value="append">Append to previous results</option>
+          <option ng-if="enableIntelligentAppend" value="intelligently">Intelligently Append</option>
+        </select>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="action-btn-container">
+        <div class="action-btn-top">
+          <button-test
+            alt="Run the report right now, without saving."
+            ng-click="testReport()"
+            ng-disabled="!shouldEnableButtons()">Test</i>
+          </button-test>
+          <button-delete
+            ng-if="shouldShowDelete()"
+            alt="Delete this report."
+            ng-click="deleteReport()"
+            ng-disabled="!userCanDeleteReport()">Delete</i>
+          </button-delete>
+          <button-save
+            ng-if="!shouldShowDelete()"
+            alt="Save the report to run later."
+            ng-click="saveReport()"
+            ng-disabled="!shouldEnableButtons()">Save</i>
+          </button-save>
+        </div>
+        <button-save
+          ng-if="shouldShowDelete()"
+          alt="Save the report to run later."
+          ng-click="saveReport()"
+          ng-disabled="!shouldEnableButtons()">Save</i>
+        </button-save>
+      </div>
+
+    </form>
+  </div>
+</template>
+
+<!-- report.js.html -->
+
+<script>
+angular.module('addonApp').controller('ReportCtrl',
+  function ($scope, $rootScope, $state, $stateParams, $goog, $window, $timeout, AppsToast, ADDON_ERROR_CODES, HandleError) {
+
+    $scope.allColumns = $window.bootstrap.columns;
+    $scope.params = $window.bootstrap.params;
+    $scope.enableIntelligentAppend = $window.bootstrap.enableIntelligentAppend;
+    $scope.selectParams = {};
+
+    $scope.id = $stateParams.id;
+    $scope.report = _.extend({
+      columns: _.pluck($window.bootstrap.columns, 'id'),
+      params: {},
+      clearAppend: "clear",
+      scheduled: false,
+    }, $stateParams.report);
+
+    // sync selectParams to $scope.report.params for dynamic select elements
+    $scope.$watch('selectParams', function(newValue) {
+      angular.forEach(newValue, function(v, k) {
+        $scope.report.params[k] = v.value;
+      });
+    }, true);
+
+    // sync $scope.report.params to selectParams if $scope.report
+    // is ever set directly
+    $scope.$watch('report', function(newValue) {
+      angular.forEach(_.where($scope.params, {type: 'select'}), function(sParam) {
+        // for each select param, sync to selectParams
+        $scope.selectParams[sParam.id] = _.findWhere(sParam.options, {
+            value: newValue.params[sParam.id]
+        });
+      });
+    });
+
+    // set any default values dictated by admin
+    angular.forEach($scope.params, function(param) {
+      if ($scope.report.params[param.id] === undefined) {
+        $scope.report.params[param.id] = param.value;
+      }
+    });
+
+    $scope.isChecked = function(id) {
+      return $scope.report.columns.indexOf(id) >= 0;
+    };
+
+    $scope.updateColumn = function(id) {
+      var i = $scope.report.columns.indexOf(id);
+      if (i !== -1) {
+        // exists
+        $scope.report.columns.splice(i, 1);
+      } else {
+        $scope.report.columns.push(id);
+      }
+    };
+
+    $scope.testReport = function() {
+      return $scope.saveReport().then($goog.runImport)
+        .then(function(newReport) {
+          $scope.report = newReport;
+          return newReport;
+        })
+        .catch(HandleError(ADDON_ERROR_CODES));
+    };
+
+    $scope.deleteReport = function() {
+      $goog.deleteReport($scope.report.id).then(function() {
+        // successful
+        AppsToast.success('Deleted Report');
+        $timeout(function() {
+          $state.go('main');
+        }, 500);
+      }).catch(HandleError(ADDON_ERROR_CODES));
+    };
+
+    $scope.saveReport = function() {
+      // optimistic success
+      AppsToast.success('Report Saved');
+      return $goog.saveReport($scope.report).then(function(updatedReport) {
+        $scope.report = updatedReport;
+        return updatedReport;
+      }).catch(HandleError(ADDON_ERROR_CODES));
+    };
+
+    $scope.shouldShowDelete = function() {
+      // report must already exist
+      return $scope.report.id !== undefined;
+    };
+
+    $scope.userCanDeleteReport = function() {
+      return (!$scope.report.scheduled) ||
+             ($scope.report.owner === $rootScope.user);
+    };
+
+    $scope.shouldEnableButtons = function() {
+      var ks = _.keys($scope.report.params);
+      angular.forEach($scope.params, function(param) {
+        if (param.required) {
+          if (ks.indexOf(param.id) === -1) {
+            return false;
+          }
+        }
+      });
+
+      return $scope.report.name &&
+             $scope.report.name.length &&
+             $scope.report.columns.length;
+    };
+
+    $scope.debug = function() {
+      return JSON.stringify($scope.report, '', 2);
+    };
+  }
+);
+
+</script>

@@ -1,102 +1,270 @@
-Template: Importing Data to Sheets
-==================================
+# sheets-import
 
-This template provides a framework for creating a Sheets [add-on](https://developers.google.com/apps-script/add-ons/)
-that imports data from a 3rd-party source (such as an API).
+An Add-on Template for importing data from a third-party source into
+Google Sheets.
 
-It shows the basic structure needed to define a UI and how to coordinate
-communication between the client, server, and 3rd-party source.
-This template also demonstrates some useful aspects of Apps Script, including:
+**Features:**
 
-* Writing data to a Google Sheet
-* Using time-based triggers to establish automated sheet updates
-* Using [Templated HTML](https://developers.google.com/apps-script/guides/html/templates)
-* Using IFRAME sandbox mode
+- Rapid integration with third-party data sources like APIs or internal
+  databases,
+- Configurable options for each report;
+  **add text fields, checkboxes, and selectboxes** and reference them in
+  your API call,
+- Scheduled reports that run every 24 hours,
+- Collaborative reports shared between users,
+- Update sheets in the background.
 
-**Note**: The purpose of this template is to show a general add-on structure.
-It will not run as an add-on in it's current state. To make use of this
-template, you will need to fill in the sections marked **TODO** to customize
-the template to a specific 3rd-party data source.
+![A demo of sheets-import integrated with GitHub](assets/demo.gif)
 
-## Project manifest
-The following project files are included in this template:
+## Quickstart
 
-* **APICode.gs** - This file contains all the API-specific code for handling
-  authorization, callbacks, and API calls. It will need to be modified to handle
-  a specific API.
-* **Auth.gs** - This file contains code that assists with constructing a
-  OAuth2 service object using the [Apps Script OAuth2 library](https://github.com/googlesamples/apps-script-oauth2).
-* **AuthCallbackView.html** - This file is the page that is presented to the
-  user after an authorization attempt, and shows whether the authorization was
-  successful.
-* **AuthorizationEmail.html** - This file contains the html template of an email
-  that would be sent to the user in the event that a trigger attempts to fire
-  without all the required authorizations.
-* **Configurations.gs** - This file contains code that controls the creation,
-  updating and deletion of report configurations that describe what to import
-  to Sheets from the 3rd party source. By default report configurations are
-  saved to Apps Script's PropertyService, but it would be possible to adapt the
-  code here to store that data elsewhere (for example, in an external database).
-* **JavaScript.html** - This file contains the bulk of the control code for the
-  sidebar UI.
-* **Server.gs** - This file contains server-side code that responds to user
-  interactions in the sidebar UI. It also sets up the add-on menu.
-* **Sidebar.html** - This file contains the HTML structure for that defines
-  the sidebar UI.
-* **Stylesheet.html** - This file contains all the CSS properties defined for
-  the template.
-* **Utilities.gs** - This file contains some generic functionalities to support
-  the rest of the code. The functions here are not specific to this template and
-  could be taken for use in other projects without modification.
-* **intercom.js.html** - This file contains a copy of
-  [intercom.js](https://github.com/diy/intercom.js),
-  a cross-window message broadcast interface (intercom.js is released under an
-  Apache V2.0 license).
+#### 1. Create the Apps Script Project
 
-## Setup: Libraries
-This template makes use of the following libraries, which much the added to the
-Apps Script project before the template can be used:
+1. Navigate to [https://script.google.com](https://script.google.com) and create
+  a new `Blank Project`.
+2. For each file in this repo, create a file of the
+  correct type and paste in the contents.
+  - For an HTML file, select `File` > `New` > `Html File` and enter the
+    full name (i.e. `app.js.html`).
+  - For a Script file, select `File` > `New` > `Script File` and enter the
+    full name (i.e. `server.gs`).
+  - The files you must copy over are:
+    - [app.js.html](/raw/master/app.js.html),
+    - [authorize.html](/raw/master/authorize.html),
+    - [config.gs](/raw/master/config.gs),
+    - [index.html](/raw/master/index.html),
+    - [main.html](/raw/master/main.html),
+    - [myService.gs](/raw/master/myService.gs),
+    - [myServiceAuthCallbackView.html](/raw/master/myServiceAuthCallbackView.html),
+    - [myServiceReauthorizationEmail.html](/raw/master/myServiceReauthorizationEmail.html),
+    - [report.html](/raw/master/report.html),
+    - [util.gs](/raw/master/util.gs).
 
-* [Apps Script OAuth2 library](https://github.com/googlesamples/apps-script-oauth2)
-* [Underscore](http://underscorejs.org/)
+#### 2. Add Required Libraries to the Project
 
-These libraries are already published as an Apps Script, making it easy to
-include in your project. To add it to your script, do the following in the
-Apps Script code editor:
+  1. Click `Resources` > `Libraries`.
+  2. Paste `MswhXl8fVhTFUH_Q3UOJbXvxhMjh3Sh48` (Underscore) into the
+    `Find a Library` box and select it.
+  3. Paste `MGwgKN2Th03tJ5OdmlzB8KPxhMjh3Sh48` (OAuth2) into the
+    `Find a Library` box and select it.
+  4. Select the most recent version of each library from the `Version` dropdown.
+  5. Click the `Save` button.
 
-1. Click on the menu item "Resources > Libraries..."
-1. In the "Find a Library" text box, enter the project key
-"MswhXl8fVhTFUH_Q3UOJbXvxhMjh3Sh48" and click the "Select" button.
-1. Choose the latest version in the dropdown box.
-1. Click the "Save" button.
+#### 3. Configure Your Service
 
-This will add the [OAuth2 library](https://github.com/googlesamples/apps-script-oauth2)
-to your project. Repeat the above steps with the project key
-"MGwgKN2Th03tJ5OdmlzB8KPxhMjh3Sh48" to add Underscore to the project as well.
+You can use this template to import data from pretty much any data source, be it
+external APIs or internal databases. Because integrating with external APIs is
+a frequent requirement, the **sheets-import** template is already configured with
+[OAuth2](https://github.com/googlesamples/apps-script-oauth2) for the external
+services which support it. Simply fill in the appropriate OAuth values and write
+a function to query your datasource.
 
-## Setup: API configuration
-This template requires app-specific configuration before it can used.
-Specifically, the template will need to be informed of the authorization
-details, and certain adjustments made to ensure the correct data can be
-extracted from the responses.
+#### 3.1 Integrating with GitHub, as an Example
 
-In the Server.gs, APICode.gs and Auth.gs project files, there are several
-comments marked as **TODO**. To configure the template, visit each of these
-**TODO** sections and follow the directions found there.
+As an example, here is how to configure the **sheets-import** template to pull
+Issues from GitHub based on a search term and ranking option.
 
-Note that the template design assumes that the template will connect to an API
-service using OAuth 2.0; however, it would be possible adapt it to connect to
-a different kind of service, such as a SQL database.
+**First, create a GitHub developer application.**
 
-## Additional information
+Go to [https://github.com/settings/developers](https://github.com/settings/developers)
+and `Register a New Application`.
 
-For more information, see:
+Fill out the name, homepage, and description as usual.
+In *Authorization Callback URL*, put
 
-* [Extending Google Sheets](https://developers.google.com/apps-script/guides/sheets)
-* [Known Issues specific to Google Sheets](https://developers.google.com/apps-script/migration/sheets)
+```
+https://script.google.com/macros/d/{PROJECT KEY}/usercallback
+```
 
-Note that this template must be added to a container-bound
-script attached to a Google Sheet in order to function. Developed
-add-ons must go through a
-[publishing process](https://developers.google.com/apps-script/add-ons/publish)
-before they can be made available publicly.
+Where `{PROJECT KEY}` is your projects unique identifier found via
+`File` > `Project Properties` in the Apps Script Editor.
+
+**Second, fill out config.js with the GitHub-specific values.**
+
+They should look similar to the following:
+
+```js
+var MY_SERVICE_NAME = 'GitHub';
+var AUTH_SERVICE_NAME = 'github';
+var AUTH_BASE_URL = 'https://github.com/login/oauth/authorize';
+var AUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token';
+var AUTH_CLIENT_ID = '{CLIENT ID}';
+var AUTH_CLIENT_SECRET = '{CLIENT SECRET}';
+var AUTH_SCOPES = [
+  'user:email'
+].join(', ');
+```
+
+Where `{CLIENT ID}` and `{CLIENT SECRET}` are obtained from GitHub.
+
+**Finally, customize myService.gs**
+
+Simply uncomment the illustrative blocks of code in `getColumnOptions()`
+and `getDataPage()`.
+
+## Configuration
+
+**sheets-import** provides easy configuration options for simple modifications.
+Open up [config.gs](config.gs) and [myService.gs](myService.gs) to modify the
+relevant code.
+
+Options include:
+
+- Changing the add-on name and sidebar title,
+- Configuring a third-party OAuth service,
+- Enabling/Disabling intelligent appending,
+- Creating and modifying report parameters (more details below),
+- Writing a function to pull data from an outside source.
+
+### Report Parameters
+
+Parameters let you accept user-input during report configuration, for example a
+search term, a checkbox value, or a select option. These parameters are then
+available in `getDataPage()` as `config.params[{PARAM ID}]` where `{PARAM ID}` is
+a unique id for each parameter, described below. See [myService.gs](myService.gs)
+for a comprehensive example.
+
+To configure parameters for your service, follow the examples in
+[myService.gs](myService.gs). The options are also documented here.
+
+**Text Field**
+
+<table>
+  <tr><th>Property</th><th>Type</th><th>Description</th><th>Required?</th></tr>
+
+  <tr>
+    <td>id</td>
+    <td>String</td>
+    <td>A unique ID for this param.</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>String</td>
+    <td>Must be "text" for a Text Field.</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>label</td>
+    <td>String</td>
+    <td>The human-readable label above the param.</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td>helper</td>
+    <td>String</td>
+    <td>The human-readable helper text below the label.</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td>value</td>
+    <td>String</td>
+    <td>The default value of the text field.</td>
+    <td>No</td>
+  </tr>
+</table>
+
+**Checkbox**
+
+<table>
+  <tr><th>Property</th><th>Type</th><th>Description</th><th>Required?</th></tr>
+
+  <tr>
+    <td>id</td>
+    <td>String</td>
+    <td>A unique ID for this param.</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>String</td>
+    <td>Must be "checkbox" for a checkbox.</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>label</td>
+    <td>String</td>
+    <td>The human-readable label above the param.</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td>helper</td>
+    <td>String</td>
+    <td>The human-readable helper text below the label.</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td>value</td>
+    <td>Bool</td>
+    <td>The default value of the checkbox.</td>
+    <td>No</td>
+  </tr>
+</table>
+
+**Select Dropdown**
+
+<table>
+  <tr><th>Property</th><th>Type</th><th>Description</th><th>Required?</th></tr>
+
+  <tr>
+    <td>id</td>
+    <td>String</td>
+    <td>A unique ID for this param.</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>String</td>
+    <td>Must be "select" for a Select Dropdown.</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>label</td>
+    <td>String</td>
+    <td>The human-readable label above the param.</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td>helper</td>
+    <td>String</td>
+    <td>The human-readable helper text below the label.</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td>options</td>
+    <td>Array</td>
+    <td>Array of options where an option has the format <br/> "{value: "", label: ""}"</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>value</td>
+    <td>String</td>
+    <td>The default value of the select dropdown. Must be one of the `value`s from the `options` array.</td>
+    <td>Yes</td>
+  </tr>
+</table>
+
+## Extending the Template
+
+The **sheets-import** template makes use of [AngularJS](https://angularjs.org).
+If you're not familiar with Angular, we recommend working through the
+[tutorial on the site](https://docs.angularjs.org/tutorial).
+
+`index.html` is loaded by the sidebar UI. It includes `main.html`,
+`report.html`, and `authorize.html`, along with the add-on global css and
+various libraries.
+
+`config.gs` contains the basic configuration options that you must modify
+
+`myService.gs` contains the implementation code for your third party service
+
+`myServiceAuthCallbackView.html` is the html loaded after an OAuth provider
+redirects back to your add-on.
+
+`myServiceReauthorizationEmail.html` contains the html sent to a user when they
+must provide additional authorization to your add-on.
+
+`server.gs` contains various operations around reports
+
+`util.gs` contains various utility functions and helpful snippets for the
+template

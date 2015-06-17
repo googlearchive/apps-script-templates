@@ -1,0 +1,142 @@
+<!--
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ -->
+
+<!-- main.css.html -->
+
+<style>
+  #main-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #main-container h3 {
+    text-align: center;
+  }
+
+  .create-container {
+    text-align: center;
+  }
+
+  .search-container {
+    margin-top: 22px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .search-container i {
+    margin-right: 10px;
+  }
+
+  .search-container input {
+    flex: 1;
+  }
+
+  .search-results-container {
+    margin-top: 20px;
+    max-height: 80vh;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+
+  .search-result {
+    margin: 5px;
+  }
+
+  .owner-filter-label {
+    margin-left: 5px;
+  }
+
+  .owner-filter-label input {
+    margin-right: 6px;
+  }
+
+  .spinner-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+</style>
+
+<!-- main.html -->
+
+<template id="main">
+  <div id="main-container">
+
+    <h3>Welcome to the Reports Dashboard</h3>
+    <p ng-if="isFirstRun" class="small">
+      With this Sheets addon, you can create automatically generated spreadsheet
+      reports. Start by creating a report
+      below{{reports.length > 0 ? '' : ' or choosing a report below'}}.
+    </p>
+
+    <div class="create-container">
+      <button-create ui-sref="report.create">Create a Report</button-create>
+    </div>
+
+    <div ng-if="reports.length">
+      <h4>Find a Report</h4>
+      <div class="search-container">
+        <i class="fa fa-search"></i>
+        <input type="text" placeholder="Search for a Report" ng-model="reportSearchValue">
+        <label class="owner-filter-label">
+          <input type="checkbox" ng-model="showMyReports">My Reports
+        </label>
+      </div>
+
+      <div class="search-results-container">
+        <div class="search-result" ng-repeat="report in reports | reportName:reportSearchValue | isOwner:showMyReports">
+          <button-edit ui-sref="report({id: report.id, report: report})">
+            {{report.name}}
+          </button-edit>
+        </div>
+      </div>
+    </div>
+    <div ng-if="!reports" class="spinner-container">
+      <img src="https://ssl.gstatic.com/docs/spreadsheets/spinner.gif">
+    </div>
+  </div>
+</template>
+
+<!-- main.js.html -->
+
+<script>
+
+angular.module('addonApp').controller('MainCtrl',
+    function ($scope, $goog, localStorageService) {
+      $scope.isFirstRun = !localStorageService.get('hasRunBefore');
+      localStorageService.set('hasRunBefore', true);
+
+      $goog.getAllReports().then(function(reports) {
+        $scope.reports = reports;
+      });
+
+      $scope.debug = function() {
+        $goog.debug().then(function() {
+          console.log(arguments);
+        }).catch(function() {
+          console.log(arguments);
+        });
+      };
+
+});
+
+</script>

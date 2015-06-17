@@ -1,0 +1,76 @@
+<!--
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ -->
+
+<!-- authorize.css.html -->
+
+<style>
+  #auth-container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: flex-start;
+    align-items: center;
+  }
+</style>
+
+<!-- authorize.html -->
+
+<template id="authorize">
+  <div id="auth-container">
+    <p>Authorize {{ $root.myService }} to begin creating reports.</p>
+    <button ng-click="openAuthUrl()">Authorize {{ $root.myService }}</button>
+    <p ng-if="showPopupHelper">
+      You may need to allow the popup blocked by your brower to authorize with {{ $root.myService }}
+    </p>
+  </div>
+</template>
+
+<!-- authorize.js.html -->
+
+<script>
+
+angular.module('addonApp').controller('AuthCtrl', function ($scope, $rootScope, $window, $q, $goog) {
+
+  // get a new authorization url when this controller is instantiated
+  var authUrlPromise = $goog.getAuthorizationUrl().then(function(url) {
+    $scope.url = url;
+  });
+
+  $scope.openAuthUrl = function() {
+    if ($scope.url === undefined) {
+      // show the helper that informs the user to allow popups from your addon
+      // this is because the authorization url is dynamically generated on the
+      // server and is not invoked as a direct result of a button click
+      $scope.showPopupHelper = true;
+
+      authUrlPromise.then(function(url) {
+        $scope.openUrl(url);
+        $scope.showPopupHelper = false;
+      })
+      .catch(console.log.bind(console));
+    } else {
+      $scope.openUrl($scope.url);
+    }
+  };
+
+  $scope.openUrl = function(url) {
+    $window.open(url, 'Authorize ' + $rootScope.MY_SERVICE_NAME, 'height=600,width=300');
+  };
+
+});
+
+</script>

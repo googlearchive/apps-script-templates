@@ -21,16 +21,6 @@
 var _ = Underscore.load();
 
 /**
- * TODO: Replace the following with the name of the service you are importing
- * from and the name of the add-on you are building, respectively.
- */
-var DATA_ALIAS = 'MyDataSource';
-var ADDON_NAME = "YOUR_ADDON_NAME_HERE";
-var SIDEBAR_TITLE = 'Import Control Center';
-var MAX_SCHEDULED_REPORTS = 24;
-var IMPORT_PAGE_SIZE = 30;
-
-/**
  * Error code enum; this gets passed to the sidebar for use there as well.
  */
 var ERROR_CODES = {
@@ -38,7 +28,7 @@ var ERROR_CODES = {
   ILLEGAL_EDIT: 2,
   ILLEGAL_DELETE: 3,
   IMPORT_FAILED: 4
-}
+};
 
 /**
  * Adds a custom menu with items to show the sidebar.
@@ -47,7 +37,7 @@ var ERROR_CODES = {
 function onOpen(e) {
   SpreadsheetApp.getUi()
       .createAddonMenu()
-      .addItem('Import control center', 'showSidebar')
+      .addItem(SIDEBAR_TITLE, 'showSidebar')
       .addToUi();
 }
 
@@ -65,15 +55,8 @@ function onInstall(e) {
  * project file.
  */
 function showSidebar() {
-  var service = getService();
-  var template = HtmlService.createTemplateFromFile('Sidebar');
-  template.user = Session.getEffectiveUser().getEmail();
-  template.dataSource = DATA_ALIAS;
-  template.isAuthorized = service.hasAccess();
-  template.authorizationUrl = null;
-  if (!template.isAuthorized) {
-    template.authorizationUrl = service.getAuthorizationUrl();
-  }
+  var template = HtmlService.createTemplateFromFile('index');
+  template.bootstrap = JSON.stringify(getBootstrapData());
   var page = template.evaluate()
       .setTitle(SIDEBAR_TITLE)
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
@@ -81,72 +64,91 @@ function showSidebar() {
 }
 
 /**
- * Return data needed to build the sidebar UI: a list of the names of the
- * currently saved report configurations and the list of potential
- * column choices.
+ * Return data needed to build the sidebar UI
  * @return {Object} a collection of saved report data and column options.
  */
-function getInitialDataForSidebar() {
-  var reportSet = getAllReports();
-  var reportList = [];
-  _.each(reportSet, function(val, key) {
-    reportList.push({'name': val, 'reportId': key});
-  });
-  reportList.sort(function (a, b) {
-    if (a.name > b.name) { return 1; }
-    if (a.name < b.name) { return -1; }
-    return 0;
-  });
-  return {reports: reportList, columns: getColumnOptions()};
+function getBootstrapData() {
+  var service = getService();
+  var r = {
+    columns: getColumnOptions(),
+    params: getParams(),
+    user: Session.getEffectiveUser().getEmail(),
+    isAuthorized: service.hasAccess(),
+    myService: MY_SERVICE_NAME,
+    enableIntelligentAppend: ENABLE_INTELLIGENT_APPEND,
+  };
+  if (!r.isAuthorized) { r.authorizationUrl = service.getAuthorizationUrl(); }
+  return r;
 }
 
 /**
- * Get the report configuration for the given report and, if a sheet
- * exists for it, activate that sheet.
- * @param {String} reportId a report ID.
+ * Example of a authorization callback function that is called after an
+ * authorization attempt. Presents an authorization results window upon
+ * completion of the API auth sequence. For additional details, see the
+ * OAuth2 Apps Script library:
+ *   https://github.com/googlesamples/apps-script-oauth2
+ * @param {Object} request results of API auth request.
  */
-function switchToReport(reportId) {
-  var config = getReportConfig(reportId);
-  activateById(config.sheetId);
-  return config;
+function authCallback(request) {
+  var template = HtmlService.createTemplateFromFile('myServiceAuthCallbackView');
+  template.user = Session.getEffectiveUser().getEmail();
+  template.isAuthorized = false;
+  template.error = null;
+  var title;
+  try {
+    var service = getService();
+    var authorized = service.handleCallback(request);
+    template.isAuthorized = authorized;
+    title = authorized ? 'Access Granted' : 'Access Denied';
+  } catch (e) {
+    template.error = e;
+    title = 'Access Error';
+  }
+  template.title = title;
+  return template.evaluate()
+      .setTitle(title)
+      .setSandboxMode(HtmlService.SandboxMode.IFRAME);
 }
 
 /**
  * Import data to the spreadsheet according to the given report
  * configuration.
- * @param {String} reportId the report identifier.
+ * @param {Object} report the report config
  * @return {Object} the (possibly updated) report configuration.
  */
-function runImport(reportId) {
+function runImport(config) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var config = getReportConfig(reportId);
 
   // Acquire the sheet to place the import results in,
   // then clear and format it.
   // Update the saved config with sheet/time information.
   var sheet = activateReportSheet(config);
-  var columnIds = getColumnIds(config);
   var lastRun = new Date().toString();
-  config = updateOnImport(config, sheet, lastRun);
+  if (config.id !== undefined) {
+    // if the config has been saved before, update it in the db
+    // otherwise, just run it and see how it does
+    config = updateOnImport(config, sheet, lastRun);
+  }
 
   // Call for pages of API information to place in the sheet, one
   // page at a time.
   var pageNumber = 0;
-  var firstRow = 2;
+  var firstRow = config.clearAppend === 'clear' ? 2 : sheet.getLastRow() + 1;
   try {
     var page;
     do {
-      page = getDataPage(columnIds, pageNumber, IMPORT_PAGE_SIZE, config);
+      page = getDataPage(config.columns, pageNumber, IMPORT_PAGE_SIZE, config);
       if (page) {
+        page = padValues(page);
         sheet.getRange(firstRow, 1, page.length, page[0].length).setValues(page);
         firstRow += page.length;
         pageNumber++;
         SpreadsheetApp.flush();
       }
-    } while (page != null);
+    } while (page !== null);
   } catch (e) {
     // Ensure a new sheet Id, if created, is preserved.
-    throw ERROR_CODES.IMPORT_FAILED;
+    throw e;
   }
 
   for (var i = 1; i <= sheet.getLastColumn(); i++) {
@@ -157,49 +159,27 @@ function runImport(reportId) {
 }
 
 /**
- * Save the given report configuration.
- * @param {Object} config a report configuration to save.
- * @return {Object} the updated report configuration.
+ * pads the 2D array to be square
+ * @param {Array} page the 2D page
+ * @return {Array} padded page
  */
-function saveReport(config) {
-  var existingConfig = getReportConfig(config.reportId);
-  if (existingConfig != null) {
-    activateById(existingConfig.sheetId);
-    // Check: users are not allowed to save edits to reports
-    // created by other users if those reports have been marked
-    // for auto-update.
-    if (!canEditReport(existingConfig)) {
-      throw ERROR_CODES.ILLEGAL_EDIT;
+function padValues(page) {
+  var maxCols = _.max(page, function(r) {
+    return r.length;
+  }).length;
+
+  return _.map(page, function(row) {
+    var diff = maxCols - row.length;
+    for (var i = 0; i < diff; i++) {
+      row.push(null);
     }
-  }
-  // Check against max number of scheduled reports.
-  if (isOverScheduleLimit(config)) {
-    throw ERROR_CODES.AUTO_UPDATE_LIMIT;
-  }
-  
-  var result = saveReportConfig(config);
-  adjustScheduleTrigger();
-  return result;
+
+    return row;
+  });
 }
 
 /**
- * Delete the given report configuration.
- * @param {String} reportId indicates the report to delete.
- * @return {String} the report ID deleted.
- */
-function removeReport(reportId) {
-  // Check: users are not allowed to delete reports created by
-  // other users if those reports have been marked for auto-update.
-  if (!canEditReport(getReportConfig(reportId))) {
-    throw ERROR_CODES.ILLEGAL_DELETE;
-  }
-  deleteReportConfig(reportId);
-  adjustScheduleTrigger();
-  return reportId;
-}
-
-/**
- * Activate, clear, format and return the sheet associated with the
+ * Activate, potentially clear, format, and return the sheet associated with the
  * specified report configuration. If the sheet does not exist, create,
  * format and activate it.
  * @param {Object} config the report configuration.
@@ -208,17 +188,20 @@ function removeReport(reportId) {
 function activateReportSheet(config) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = getSheetById(ss, parseInt(config.sheetId));
-  if (sheet == null) {
+  if (sheet === null) {
     sheet = ss.insertSheet();
     sheet.setName(getUniqueSheetName(ss, config.name));
   }
   sheet.activate();
-
+  var allColumns = getColumnOptions();
   var headers = _.map(config.columns, function(col) {
-    return col.label;
+    return _.findWhere(allColumns, {id: col}).label;
   });
-  sheet.clear();
-  sheet.clearNotes();
+  if (config.clearAppend === "clear") {
+    sheet.clear();
+    sheet.clearNotes();
+  }
+
   sheet.setFrozenRows(1);
   sheet.getRange('1:1')
     .setFontWeight('bold')
@@ -253,7 +236,7 @@ function respondToHourlyTrigger() {
     for (var i = 0; i < potentials.length; i++) {
       var lastRun = potentials[i].lastRun;
       if (!lastRun || isOlderThanADay(lastRun) ) {
-        runImport(potentials[i].reportId);
+        runImport(potentials[i]);
         return;
       }
     }
@@ -275,7 +258,7 @@ function sendReauthorizationRequest() {
   if (lastAuthEmailDate != today) {
     if (MailApp.getRemainingDailyQuota() > 0) {
       var template =
-          HtmlService.createTemplateFromFile('AuthorizationEmail');
+          HtmlService.createTemplateFromFile('myServiceReauthorizationEmail');
       template.url = authInfo.getAuthorizationUrl();
       template.addonName = ADDON_NAME;
       var message = template.evaluate();
@@ -295,25 +278,40 @@ function sendReauthorizationRequest() {
  * by the current user are present; turn it off otherwise.
  */
 function adjustScheduleTrigger() {
+
+  if (TESTING) {
+    return;
+  }
+
   var existingTriggerId = getTriggerId();
   var user = Session.getEffectiveUser().getEmail();
   var triggerNeeded = getScheduledReports(user).length > 0;
 
   // Create a new trigger if required; delete existing trigger
   // if it is not needed.
-  if (triggerNeeded && existingTriggerId == null) {
+  if (triggerNeeded && existingTriggerId === null) {
     var trigger = ScriptApp.newTrigger('respondToHourlyTrigger')
         .timeBased()
         .everyHours(1)
         .create();
-    saveTriggerId(trigger);
-  } else if (!triggerNeeded && existingTriggerId != null) {
+    saveTriggerId(trigger.getUniqueId());
+  } else if (!triggerNeeded && existingTriggerId !== null) {
+    Logger.log('remove trigger');
     var existingTrigger = getUserTriggerById(
         SpreadsheetApp.getActiveSpreadsheet(),
         existingTriggerId);
-    if (existingTrigger != null) {
+    if (existingTrigger !== null) {
       ScriptApp.deleteTrigger(existingTrigger);
     }
     removeTriggerId();
   }
+}
+
+function debug() {
+  Logger.log('reset');
+  PropertiesService.getDocumentProperties().deleteAllProperties();
+  _.each(SpreadsheetApp.getActiveSpreadsheet().getSheets(), function(s) {
+    s.activate();
+    SpreadsheetApp.getActiveSpreadsheet().deleteActiveSheet();
+  });
 }

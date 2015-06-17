@@ -1,0 +1,146 @@
+<!--
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.16/angular-animate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intercom.js/0.1.4/intercom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angularjs-toaster/0.4.14/toaster.min.js"></script>
+
+<script>
+
+window.AppsTemplate = function(id) {
+  return $('#' + id).html();
+};
+
+var ngAppsScript = angular.module('ngAppsScript', ['toaster']);
+
+ngAppsScript.run(function() {
+
+});
+
+// turns google.script.run into an ngService with a promise api
+ngAppsScript.service('$goog', function($q) {
+
+  var promisify = function(k) {
+    return function() {
+      var args = arguments;
+      return $q(function(resolve, reject) {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          [k].apply(google.script.run, args);
+      });
+    };
+  };
+
+  var gs = {};
+  var ks = Object.keys(google.script.run);
+  for (var i=0; i < ks.length; i++) {
+    gs[ks[i]] = promisify(ks[i]);
+  }
+  return gs;
+});
+
+ngAppsScript.service('HandleError', function(toaster) {
+  return function(ADDON_ERROR_CODES) {
+    return function(err) {
+      toaster.clear();
+      // error toast
+      var errCode = err.message;
+      if (_.keys(ADDON_ERROR_CODES).indexOf(errCode) !== -1) {
+        toaster.error(
+          ADDON_ERROR_CODES[errCode].title,
+          ADDON_ERROR_CODES[errCode].message
+        );
+      } else {
+        toaster.error(err.name, err.message);
+      }
+    };
+  };
+});
+
+ngAppsScript.service('AppsToast', function(toaster) {
+  return toaster;
+});
+
+ngAppsScript.directive('buttonEdit', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    replace: true,
+    template: '<button><ng-transclude></ng-transclude> <i class="fa fa-pencil"></i></button>'
+  };
+});
+
+ngAppsScript.directive('buttonShare', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    replace: true,
+    template: '<button class="share"><ng-transclude></ng-transclude> <i class="fa fa-share"></i></button>'
+  };
+});
+
+ngAppsScript.directive('buttonTest', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    replace: true,
+    template: '<button class="green"><ng-transclude></ng-transclude> <i class="fa fa-flask"></i></button>'
+  };
+});
+
+ngAppsScript.directive('buttonCreate', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    replace: true,
+    template: '<button class="create"><ng-transclude></ng-transclude> <i class="fa fa-plus"></i></button>'
+  };
+});
+
+ngAppsScript.directive('buttonDelete', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    replace: true,
+    template: '<button class="red"><ng-transclude></ng-transclude> <i class="fa fa-trash"></i></button>'
+  };
+});
+
+ngAppsScript.directive('buttonAction', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    replace: true,
+    template: '<button class="action"><ng-transclude></ng-transclude></i></button>'
+  };
+});
+
+ngAppsScript.directive('buttonSave', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    replace: true,
+    template: '<button class="blue"><ng-transclude></ng-transclude> <i class="fa fa-check"></i></button>'
+  };
+});
+
+
+
+
+
+
+</script>
