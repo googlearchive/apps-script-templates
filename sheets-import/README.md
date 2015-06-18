@@ -14,7 +14,7 @@ Google Sheets.
 - Collaborative reports shared between users,
 - Update sheets in the background.
 
-![A demo of sheets-import integrated with GitHub](assets/demo.gif)
+![A demo of sheets-import integrated with GitHub](media/demo.gif)
 
 ## Quickstart
 
