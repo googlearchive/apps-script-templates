@@ -41,14 +41,30 @@ var AUTH_CLIENT_ID = '';
 var AUTH_CLIENT_SECRET = '';
 var AUTH_SCOPES = [
   'email',
-].join(', '); // @AUTH @TODO the separator differs per service. Google uses space-separated scopes
+].join(' '); // @AUTH @TODO the separator differs per service. Google uses space-separated scopes
 
+/**
+ * @AUTH below is the GitHub-specific code; uncomment to enable, along with
+ * the other relevant @AUTH blocks in the codebase
+*/
+/**
+var MY_SERVICE_NAME = 'GitHub Issues'; // human readable name
+var AUTH_SERVICE_NAME = 'github'; // unique name (i.e. 'GoogleDrive') for your service
+var AUTH_BASE_URL = 'https://github.com/login/oauth/authorize';
+var AUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token';
+var AUTH_CLIENT_ID = '';
+var AUTH_CLIENT_SECRET = '';
+var AUTH_SCOPES = [
+  'email',
+].join(', ');
+*/
 
 /**
  * Intelligent Append will look for an `id` column and only append values
  * that occur after it, ignoring values before
  *
  * For this to work, there must be a column with id: `id` in getColumnOptions
+ * (see the GitHub Issues example code in getColumnOptions)
  */
 var ENABLE_INTELLIGENT_APPEND = true;
 
