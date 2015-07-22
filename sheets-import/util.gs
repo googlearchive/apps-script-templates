@@ -39,7 +39,7 @@ function include(filename) {
 }
 
 /**
- * Includes the standard addon css.
+ * Includes the standard add-on css.
  */
 function includeAddonCSS() {
   return HtmlService.createHtmlOutput('<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">')
@@ -49,8 +49,7 @@ function includeAddonCSS() {
 
 /**
  * Includes the given template in the HTML file as content in a <template> tag
- * with the id as the filename
- * for use with ngAppsScript.js
+ * with the id as the filename. For use with ngAppsScript.js.
  * @param {String} filename Project file name.
  */
 function template(filename) {
@@ -73,61 +72,7 @@ function toQueryString(param) {
 }
 
 /**
- * Get the report configuration for the given report and, if a sheet
- * exists for it, activate that sheet.
- * @param {String} reportId a report ID.
- */
-function switchToReport(reportId) {
-  var config = getReportConfig(reportId);
-  activateById(config.sheetId);
-  return config;
-}
-
-/**
- * Return the report configuration for the report with the given
- * ID; returns an empty Object if no such report name exists.
- * @param {String} reportId a report ID.
- * @return {Object} a report configuration corresponding to that ID,
- *   or null if no such report exists.
- */
-function getReportConfig(reportId) {
-  var config = getObjectFromProperties(reportId);
-  if (!config) {
-    return null;
-  }
-  // Sheet name may have been changed manually, so
-  // get the current one.
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = getSheetById(ss, parseInt(config.sheetId));
-  config.sheetName = !sheet ? null : sheet.getName();
-  return config;
-}
-
-/**
- * Given a report configuration, save it.
- * @param {Object} config the report configuration.
- * @param {Object} the updated report configuration.
- */
-function saveReportConfig(config) {
-  if (config.id === undefined) {
-    config.id = randomString();
-    config.lastRun = null;
-    config.owner = Session.getEffectiveUser().getEmail();
-  }
-  saveObjectToProperties(config.id, config);
-  return config;
-}
-
-/**
- * Delete the report specified by the given ID.
- * @param {String} reportId indicates the report to delete.
- */
-function deleteReportConfig(reportId) {
-  deleteObjectFromProperties(reportId);
-}
-
-/**
- * Given an id and an object, save that object
+ * Save an object to the Document Properties given an id and the object
  * to the Document properties service as a JSONified string.
  * @param {String} id a unique id for the object.
  * @param {Object} obj a collection of key-values to save as
@@ -139,7 +84,7 @@ function saveObjectToProperties(id, obj) {
 }
 
 /**
- * Given an id, eturn the (JSON-parsed) object.
+ * Given an id, return the (JSON-parsed) object.
  * @param {String} id unique id of the object.
  * @return {Object} collection of key-value pairs taken from the
  *   properties service. Will return null if it doesn't exist.
@@ -151,7 +96,7 @@ function getObjectFromProperties(id) {
 
 /**
  * Given a string id, remove from the Document properties service
- * the corresponding object
+ * the corresponding object.
  * @param {String} id of the property to remove.
  */
 function deleteObjectFromProperties(id) {
@@ -183,6 +128,10 @@ function getAuthorizationUrl() {
 function signout() {
   getService().reset();
 }
+
+/**
+ * The following functions are Sheets-specific utility functions.
+ */
 
 /**
  * Sheets-specific utility. Find a sheet within a spreadsheet with
@@ -253,6 +202,65 @@ function activateById(sheetId) {
   if (sheet !== null) {
     sheet.activate();
   }
+}
+
+/**
+ * The following functions are import-sheets-specific utility functions that
+ * deal with modifying reports and scheduling them to run.
+ */
+
+/**
+ * Get the report configuration for the given report and, if a sheet
+ * exists for it, activate that sheet.
+ * @param {String} reportId a report ID.
+ */
+function switchToReport(reportId) {
+  var config = getReportConfig(reportId);
+  activateById(config.sheetId);
+  return config;
+}
+
+/**
+ * Return the report configuration for the report with the given
+ * ID; returns an empty Object if no such report name exists.
+ * @param {String} reportId a report ID.
+ * @return {Object} a report configuration corresponding to that ID,
+ *   or null if no such report exists.
+ */
+function getReportConfig(reportId) {
+  var config = getObjectFromProperties(reportId);
+  if (!config) {
+    return null;
+  }
+  // Sheet name may have been changed manually, so
+  // get the current one.
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = getSheetById(ss, parseInt(config.sheetId));
+  config.sheetName = !sheet ? null : sheet.getName();
+  return config;
+}
+
+/**
+ * Given a report configuration, save it.
+ * @param {Object} config the report configuration.
+ * @param {Object} the updated report configuration.
+ */
+function saveReportConfig(config) {
+  if (config.id === undefined) {
+    config.id = randomString();
+    config.lastRun = null;
+    config.owner = Session.getEffectiveUser().getEmail();
+  }
+  saveObjectToProperties(config.id, config);
+  return config;
+}
+
+/**
+ * Delete the report specified by the given ID.
+ * @param {String} reportId indicates the report to delete.
+ */
+function deleteReportConfig(reportId) {
+  deleteObjectFromProperties(reportId);
 }
 
 /**

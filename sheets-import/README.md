@@ -1,4 +1,4 @@
-# sheets-import
+# Template: Import Data into Google Sheets
 
 An Add-on Template for importing data from a third-party source into
 Google Sheets.
@@ -14,7 +14,7 @@ Google Sheets.
 - Collaborative reports shared between users,
 - Update sheets in the background.
 
-![A demo of sheets-import integrated with GitHub](media/demo.gif)
+![A demo of Sheets-Import integrated with GitHub](media/demo.gif)
 
 ## Quickstart
 
@@ -28,7 +28,8 @@ Google Sheets.
     full name (i.e. `app.js.html`).
   - For a Script file, select `File` > `New` > `Script File` and enter the
     full name (i.e. `server.gs`).
-  - The files you must copy over are:
+  - The files you must copy over (descriptions of each at the bottom of the
+    README) are:
     - [app.js.html](/raw/master/app.js.html),
     - [authorize.html](/raw/master/authorize.html),
     - [config.gs](/raw/master/config.gs),
@@ -43,9 +44,9 @@ Google Sheets.
 #### 2. Add Required Libraries to the Project
 
   1. Click `Resources` > `Libraries`.
-  2. Paste `MswhXl8fVhTFUH_Q3UOJbXvxhMjh3Sh48` (Underscore) into the
+  2. Paste `MGwgKN2Th03tJ5OdmlzB8KPxhMjh3Sh48` (Underscore) into the
     `Find a Library` box and select it.
-  3. Paste `MGwgKN2Th03tJ5OdmlzB8KPxhMjh3Sh48` (OAuth2) into the
+  3. Paste `MswhXl8fVhTFUH_Q3UOJbXvxhMjh3Sh48` (OAuth2) into the
     `Find a Library` box and select it.
   4. Select the most recent version of each library from the `Version` dropdown.
   5. Click the `Save` button.
@@ -54,14 +55,14 @@ Google Sheets.
 
 You can use this template to import data from pretty much any data source, be it
 external APIs or internal databases. Because integrating with external APIs is
-a frequent requirement, the **sheets-import** template is already configured with
+a frequent requirement, the **Sheets-Import** template is already configured with
 [OAuth2](https://github.com/googlesamples/apps-script-oauth2) for the external
 services which support it. Simply fill in the appropriate OAuth values and write
 a function to query your datasource.
 
 #### 3.1 Integrating with GitHub, as an Example
 
-As an example, here is how to configure the **sheets-import** template to pull
+As an example, here is how to configure the **Sheets-Import** template to pull
 Issues from GitHub based on a search term and ranking option.
 
 **First, create a GitHub developer application.**
@@ -104,7 +105,7 @@ and `getDataPage()`.
 
 ## Configuration
 
-**sheets-import** provides easy configuration options for simple modifications.
+**Sheets-Import** provides easy configuration options for simple modifications.
 Open up [config.gs](config.gs) and [myService.gs](myService.gs) to modify the
 relevant code.
 
@@ -246,7 +247,7 @@ To configure parameters for your service, follow the examples in
 
 ## Extending the Template
 
-The **sheets-import** template makes use of [AngularJS](https://angularjs.org).
+The **Sheets-Import** template makes use of [AngularJS](https://angularjs.org).
 If you're not familiar with Angular, we recommend working through the
 [tutorial on the site](https://docs.angularjs.org/tutorial).
 

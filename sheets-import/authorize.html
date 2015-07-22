@@ -45,16 +45,16 @@
 
 angular.module('addonApp').controller('AuthCtrl', function ($scope, $rootScope, $window, $q, $goog) {
 
-  // get a new authorization url when this controller is instantiated
+  // Get a new authorization url when this controller is instantiated.
   var authUrlPromise = $goog.getAuthorizationUrl().then(function(url) {
     $scope.url = url;
   });
 
   $scope.openAuthUrl = function() {
     if ($scope.url === undefined) {
-      // show the helper that informs the user to allow popups from your addon
+      // Show the helper that informs the user to allow popups from your add-on
       // this is because the authorization url is dynamically generated on the
-      // server and is not invoked as a direct result of a button click
+      // server and is not invoked as a direct result of a button click.
       $scope.showPopupHelper = true;
 
       authUrlPromise.then(function(url) {

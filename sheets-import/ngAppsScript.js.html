@@ -26,11 +26,7 @@ window.AppsTemplate = function(id) {
 
 var ngAppsScript = angular.module('ngAppsScript', ['toaster']);
 
-ngAppsScript.run(function() {
-
-});
-
-// turns google.script.run into an ngService with a promise api
+// Turns google.script.run into an ngService with a promise-based api.
 ngAppsScript.service('$goog', function($q) {
 
   var promisify = function(k) {
@@ -57,7 +53,7 @@ ngAppsScript.service('HandleError', function(toaster) {
   return function(ADDON_ERROR_CODES) {
     return function(err) {
       toaster.clear();
-      // error toast
+      // Error toast.
       var errCode = err.message;
       if (_.keys(ADDON_ERROR_CODES).indexOf(errCode) !== -1) {
         toaster.error(
@@ -137,10 +133,5 @@ ngAppsScript.directive('buttonSave', function() {
     template: '<button class="blue"><ng-transclude></ng-transclude> <i class="fa fa-check"></i></button>'
   };
 });
-
-
-
-
-
 
 </script>

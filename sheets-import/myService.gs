@@ -47,7 +47,7 @@ function getService() {
  */
 function getColumnOptions() {
 
-  // TODO: Replace this section, adding a column entry for each data of
+  // @TODO: Replace this section, adding a column entry for each data of
   // interest. id should be an identifier that can be used to locate
   // the data in the data request response, and label should be the name
   // to associate with that data in the UI.
@@ -78,10 +78,10 @@ function getColumnOptions() {
 function getParams() {
 
   /**
-   *  Params can be Text fields, Checkboxs, or Select dropdowns.
+   *  Params can be Text fields, Checkboxes, or Select dropdowns.
    *  Below is an example of how to implement each type.
    *
-   *  // text param
+   *  // Text param.
    *  params.push({
    *    id: 'q', // required; reference this value in getDataPage as config.params[id]
    *    type: 'text', // required
@@ -90,7 +90,7 @@ function getParams() {
    *    value: 'shrugs', // optional default value
    *  });
    *
-   *  // checkbox param
+   *  // Checkbox param.
    *  params.push({
    *    id: 'sortByComments', // required
    *    type: 'checkbox', // required
@@ -98,13 +98,13 @@ function getParams() {
    *    value: false, // default value
    *  });
    *
-   *  // select param
+   *  // Select param.
    *  params.push({
-   *    id: 'order', // required
-   *    type: 'select', // required
-   *    label: 'Sort Order', // large h4 text
-   *    helper: 'Ascending or Descending', // optional helper text
-   *    options: [ // a set of options for the select
+   *    id: 'order', // Required.
+   *    type: 'select', // Required.
+   *    label: 'Sort Order', // Large h4 text.
+   *    helper: 'Ascending or Descending', // Optional helper text.
+   *    options: [ // A set of options for the select.
    *      {
    *        value: 'desc',
    *        label: 'Descending',
@@ -114,7 +114,7 @@ function getParams() {
    *        label: 'Ascending',
    *      },
    *    ],
-   *    value: 'desc', // default select value (one of the `value`s from the options)
+   *    value: 'desc', // Default select value (one of the `value`s from the options).
    *  });
    */
 
@@ -215,10 +215,10 @@ function getDataPage(columns, pageNumber, pageSize, config) {
 
 
   /**
-   * if you have more than one 'page' of data
+   * If you have more than one 'page' of data
    *    (i.e., multiple batches of data per report run)
    * remove the following block to have getDataPage() called repeatedly until
-   * getDataPage returns `null`
+   * getDataPage returns `null`.
    *
    */
 
@@ -256,8 +256,8 @@ function getDataPage(columns, pageNumber, pageSize, config) {
     }
 
     data = _.map(results, function(issue) {
-      // for each user returned, create a result row with the same
-      // order as the original columns
+      // Gor each user returned, create a result row with the same
+      // order as the original columns.
 
       var fullDataRow = [
         issue.id,
@@ -268,58 +268,53 @@ function getDataPage(columns, pageNumber, pageSize, config) {
         issue.comments,
       ];
 
-      // and then reorder it for the user's output
-      return arrangDataRowForColumns(columns, fullDataRow);
+      // And then reorder it for the user's output.
+      return arrangeDataRowForColumns(columns, fullDataRow);
     });
 
     return data.length ? data : null;
    */
 
-  // for now, just return null
+  // For now, just return null, meaning no data.
   return data;
 }
 
 /**
- * Return the data row, ordered correctly
+ * Return the data row, ordered correctly.
  * @param {Array} columns an array of Strings specifying the column ids
  *   to include in the output (user provided).
  * @param {Array} row original data row, without reordering
  * @return {Array} the final row to be entered into the spreadsheet, reordered
  */
-function arrangDataRowForColumns(columns, row) {
+function arrangeDataRowForColumns(columns, row) {
   var originalColumns = getColumnOptions();
 
   return _.map(columns, function(cid) {
-    // foreach column id, look up original index and return correct value
+    // For each column id, look up original index and return correct value.
     var i = _.indexOf(_.pluck(originalColumns, 'id'), cid);
     return row[i];
   });
 }
 
 /**
- * Return the set of results after config.triggerHead
+ * Return the set of results after config.triggerHead.
  * @param {Array} results an array of arrays specifying the original results
  * @param {Object} config the report config
  * @return {Array} the results that occur after the config.triggerHead
  */
 function resultsAfterTriggerHead(results, config) {
   var ids = _.map(results, function(r) {
-    // TODO: customize this function to return a unique ID for this row
+    // @TODO: customize this function to return a unique ID for this row
     // This could also be a hash of the row contents, as a last resort.
-
-    // The GitHub Issue search endpoint returns the user's ID
+    // The GitHub Issue search endpoint returns the user's ID.
     return r.id;
   });
 
-  Logger.log(ids);
-
   if (config.triggerHead) {
-
     var firstIndex = ids.indexOf(config.triggerHead);
     if (firstIndex !== -1) {
       results = results.slice(firstIndex + 1);
     }
-
   }
   config.triggerHead = ids[ids.length - 1];
   saveReportConfig(config);

@@ -258,15 +258,15 @@ angular.module('addonApp').controller('ReportCtrl',
       scheduled: false,
     }, $stateParams.report);
 
-    // sync selectParams to $scope.report.params for dynamic select elements
+    // Sync selectParams to $scope.report.params for dynamic select elements.
     $scope.$watch('selectParams', function(newValue) {
       angular.forEach(newValue, function(v, k) {
         $scope.report.params[k] = v.value;
       });
     }, true);
 
-    // sync $scope.report.params to selectParams if $scope.report
-    // is ever set directly
+    // Sync $scope.report.params to selectParams if $scope.report
+    // is ever set directly.
     $scope.$watch('report', function(newValue) {
       angular.forEach(_.where($scope.params, {type: 'select'}), function(sParam) {
         // for each select param, sync to selectParams
@@ -276,7 +276,7 @@ angular.module('addonApp').controller('ReportCtrl',
       });
     });
 
-    // set any default values dictated by admin
+    // Set any default values dictated by admin.
     angular.forEach($scope.params, function(param) {
       if ($scope.report.params[param.id] === undefined) {
         $scope.report.params[param.id] = param.value;
@@ -326,7 +326,7 @@ angular.module('addonApp').controller('ReportCtrl',
     };
 
     $scope.shouldShowDelete = function() {
-      // report must already exist
+      // Report must already exist.
       return $scope.report.id !== undefined;
     };
 

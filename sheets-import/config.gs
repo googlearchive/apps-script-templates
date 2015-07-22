@@ -14,38 +14,39 @@
  * limitations under the License.
  */
 
-var TESTING = true;
+// Set TESTING to false when publishing to users.
+var TESTING = false;
 
 /**
  * @TODO: Replace the following with the name of the add-on you are building
- * and the title of your sidebar
+ * and the title of your sidebar.
  */
 
 var ADDON_NAME = 'YOUR_ADDON_NAME_HERE';
-var SIDEBAR_TITLE = 'My Super Awesome Sidebar';
+var SIDEBAR_TITLE = 'Import to Sheets';
 /**
  * @AUTH @TODO: If you would like to integrate with a 3rd party service using oauth,
  * fill out the following constants and review the code in myService.js
  * along with the docs at https://developers.google.com/apps-script/guides/services/external
  *
  * If you would like to integrate with popular Google services, see
- * https://developers.google.com/apps-script/guides/services/advanced
+ * https://developers.google.com/apps-script/guides/services/advanced.
  *
  */
 
-var MY_SERVICE_NAME = 'Some 3rd Party'; // human readable name
-var AUTH_SERVICE_NAME = ''; // unique name (i.e. 'GoogleDrive') for your service
+var MY_SERVICE_NAME = 'Some 3rd Party'; // Human readable name.
+var AUTH_SERVICE_NAME = ''; // Unique name (i.e. 'GoogleDrive') for your service.
 var AUTH_BASE_URL = '';
 var AUTH_TOKEN_URL = '';
 var AUTH_CLIENT_ID = '';
 var AUTH_CLIENT_SECRET = '';
 var AUTH_SCOPES = [
   'email',
-].join(' '); // @AUTH @TODO the separator differs per service. Google uses space-separated scopes
+].join(' '); // @AUTH @TODO the separator differs per service. Google uses space-separated scopes.
 
 /**
  * @AUTH below is the GitHub-specific code; uncomment to enable, along with
- * the other relevant @AUTH blocks in the codebase
+ * the other relevant @AUTH blocks in the codebase.
 */
 /**
 var MY_SERVICE_NAME = 'GitHub Issues'; // human readable name

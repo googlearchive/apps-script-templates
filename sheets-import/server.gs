@@ -56,7 +56,7 @@ function onInstall(e) {
  */
 function showSidebar() {
   var template = HtmlService.createTemplateFromFile('index');
-  template.bootstrap = JSON.stringify(getBootstrapData());
+  template.bootstrap = JSON.stringify(getSidebarBootstrapData());
   var page = template.evaluate()
       .setTitle(SIDEBAR_TITLE)
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
@@ -64,10 +64,10 @@ function showSidebar() {
 }
 
 /**
- * Return data needed to build the sidebar UI
+ * Return data needed to build the sidebar UI.
  * @return {Object} a collection of saved report data and column options.
  */
-function getBootstrapData() {
+function getSidebarBootstrapData() {
   var service = getService();
   var r = {
     columns: getColumnOptions(),
@@ -82,6 +82,7 @@ function getBootstrapData() {
 }
 
 /**
+ * Handle authorization response by returning html to show the user.
  * Example of a authorization callback function that is called after an
  * authorization attempt. Presents an authorization results window upon
  * completion of the API auth sequence. For additional details, see the
@@ -125,8 +126,8 @@ function runImport(config) {
   var sheet = activateReportSheet(config);
   var lastRun = new Date().toString();
   if (config.id !== undefined) {
-    // if the config has been saved before, update it in the db
-    // otherwise, just run it and see how it does
+    // If the config has been saved before, update it in the db
+    // otherwise, just run it and see how it does.
     config = updateOnImport(config, sheet, lastRun);
   }
 
@@ -154,12 +155,11 @@ function runImport(config) {
   for (var i = 1; i <= sheet.getLastColumn(); i++) {
     sheet.autoResizeColumn(i);
   }
-  ss.toast('Report ' + config.name + ' updated.');
   return config;
 }
 
 /**
- * pads the 2D array to be square
+ * Pads the 2D array to be square.
  * @param {Array} page the 2D page
  * @return {Array} padded page
  */
@@ -305,13 +305,4 @@ function adjustScheduleTrigger() {
     }
     removeTriggerId();
   }
-}
-
-function debug() {
-  Logger.log('reset');
-  PropertiesService.getDocumentProperties().deleteAllProperties();
-  _.each(SpreadsheetApp.getActiveSpreadsheet().getSheets(), function(s) {
-    s.activate();
-    SpreadsheetApp.getActiveSpreadsheet().deleteActiveSheet();
-  });
 }
