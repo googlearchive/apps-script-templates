@@ -248,16 +248,19 @@ To configure parameters for your service, follow the examples in
 ## Extending the Template
 
 The **Sheets-Import** template makes use of [AngularJS](https://angularjs.org).
-If you're not familiar with Angular, we recommend working through the
-[tutorial on the site](https://docs.angularjs.org/tutorial).
+If you're not familiar with Angular, we recommend working through this
+[tutorial](https://docs.angularjs.org/tutorial).
 
 `index.html` is loaded by the sidebar UI. It includes `main.html`,
 `report.html`, and `authorize.html`, along with the add-on global css and
 various libraries.
 
-`config.gs` contains the basic configuration options that you must modify
+`app.js.html` handles the initialization of the Angular app along with
+project-wide filters and constants.
 
-`myService.gs` contains the implementation code for your third party service
+`config.gs` contains the basic configuration options that you must modify.
+
+`myService.gs` contains the implementation code for your third party service.
 
 `myServiceAuthCallbackView.html` is the html loaded after an OAuth provider
 redirects back to your add-on.
@@ -265,7 +268,11 @@ redirects back to your add-on.
 `myServiceReauthorizationEmail.html` contains the html sent to a user when they
 must provide additional authorization to your add-on.
 
-`server.gs` contains various operations around reports
+`server.gs` contains various operations around reports.
 
 `util.gs` contains various utility functions and helpful snippets for the
-template
+template.
+
+`ngAppsScript.js` contains an Angular module (`ngAppsScript`) that makes working
+with Apps Script easier. It provides a Promise wrapper around
+`google.script.run` as well as directives for toasts and common button types.

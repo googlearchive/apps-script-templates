@@ -51,8 +51,7 @@ function onInstall(e) {
 }
 
 /**
- * Opens a sidebar. The sidebar structure is described in the Sidebar.html
- * project file.
+ * Opens a sidebar. The sidebar structure is described in index.html
  */
 function showSidebar() {
   var template = HtmlService.createTemplateFromFile('index');
