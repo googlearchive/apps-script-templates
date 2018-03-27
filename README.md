@@ -1,5 +1,8 @@
-Templates for Google Apps Script
-================================
+# This repo has been moved to [apps-script-samples](https://github.com/gsuitedevs/apps-script-samples/tree/master/templates).
+
+---
+
+## Templates for Google Apps Script
 
 Templates that provide an initial, working framework for Apps Script
 projects.
